@@ -1,22 +1,11 @@
-
-
-
 class Value:
-    def __init__(self, amount):
-        self.amount = amount
 
-    def __get__(self, obj, obj_type):
-        return self.amount
+    def __init__(self):
+        self.value = 0
 
-    def __set__(self, obj, value):
-        with open('log.txt', 'w') as f:
-            f.write(str(value))
+    def __set__(self, instance, value):
+        self.value = value - value * instance.commission
 
-        self.amount = value
+    def __get__(self, instance, obj_type):
+        return self.value
 
-
-class Account:
-    amount = Value()
-
-    def __init__(self, commission):
-        self.commission = commission
