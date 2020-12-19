@@ -1,32 +1,35 @@
 
-"""import asyncio
-async def tcp_echo_client(message, loop):
-    reader, writer = await asyncio.open_connection("127.0.0.1", 10001, loop=loop)
-    print("send: {}".format(message))
-    writer.write(message.encode())
-    writer.close()
-loop = asyncio.get_event_loop()
-message = "ping232"
-loop.run_until_complete(tcp_echo_client(message, loop))
-loop.close()"""
 
 import socket
+import time
+
 
 class Client:
     def __init__(self, host, port, timeout=None):
         self.host = host
         self.port = port
+        self.timeout = timeout
         self.socket = socket.socket()
-        self.socket.connect(self.host, self.port)
+        self.socket.connect((self.host, self.port))
+
 
     def put(self, metric, val, timestamp=None):
-        self.socket.sendall(metric+":"+str(val).encode("utf8"))
+        timestamp = timestamp or int(time.time())
+        message = ' '.join(['put', metric, str(val), str(timestamp)])
+        print(message)
+        self.socket.sendall(message.encode("utf8"))
 
-    def get(self):
-        pass
+    def get(self, metric):
+        while True:
+            message = "get " + metric
+            self.socket.send(message.encode("utf8"))
+            data = self.socket.recv(2048)
+            if data:
+                print(data.decode("utf8"))
+                return data
 
-
-
-socket = socket.create_connection(("127.0.0.1", 10001))
-socket.sendall("ping".encode("utf8"))
-socket.close()
+#from  client import *
+cl = Client("127.0.0.1", 10001)
+cl.put("metrica", 452)
+#cl.get("palm.cpu")
+#python D:\03_andrey\coursera\diving_into_python\client.py
