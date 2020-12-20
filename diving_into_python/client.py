@@ -9,21 +9,31 @@ class Client:
         self.host = host
         self.port = port
         self.timeout = timeout
-        self.socket = socket.socket()
-        self.socket.connect((self.host, self.port))
+        #self.socket = socket.socket()
+        #self.socket.connect((self.host, self.port))
 
 
     def put(self, metric, val, timestamp=None):
         timestamp = timestamp or int(time.time())
         message = ' '.join(['put', metric, str(val), str(timestamp)])
-        print(message)
-        self.socket.sendall(message.encode("utf8"))
+        #print(message)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+
+            sock.connect((self.host, self.port))
+
+            sock.settimeout(self.timeout)
+            sock.sendall(message.encode("utf8"))
+            sock.send(message.encode())
+            data = sock.recv(1024).decode()
+
+        if data == 'error\nwrong command\n\n':
+            raise ClientError()
 
     def get(self, metric):
-        while True:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             message = "get " + metric
-            self.socket.send(message.encode("utf8"))
-            data = self.socket.recv(2048)
+            sock.send(message.encode("utf8"))
+            data = sock.recv(2048)
             if data:
                 print(data.decode("utf8"))
                 return data
